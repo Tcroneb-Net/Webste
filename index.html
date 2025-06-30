@@ -5,81 +5,80 @@
   <title>AI Voice Generator</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
-      background: url('https://i.ibb.co/RpczBvtz/dd05afcfe34e.jpg') no-repeat center center fixed;
+      background: url('https://files.catbox.moe/7zfdcq.jpg') no-repeat center center fixed;
       background-size: cover;
       font-family: 'Segoe UI', sans-serif;
-      margin: 0;
       color: white;
+      height: 100vh;
+      overflow: hidden;
     }
-
     .overlay {
-      background: rgba(0, 0, 0, 0.6);
-      min-height: 100vh;
+      background: rgba(0, 0, 0, 0.7);
+      height: 100%;
       padding: 20px;
     }
-
     .container {
       max-width: 600px;
       margin: auto;
-      background: rgba(255, 255, 255, 0.1);
-      border-radius: 15px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 12px;
       padding: 25px;
-      box-shadow: 0 0 12px rgba(0, 0, 0, 0.3);
+      box-shadow: 0 0 10px #000;
+      margin-top: 50px;
+      animation: fadeIn 1.2s ease-in-out;
     }
-
     h1 {
       text-align: center;
+      margin-bottom: 20px;
       color: #00ffd5;
+      animation: float 2s ease-in-out infinite alternate;
     }
-
     label, select, textarea, button {
       display: block;
       width: 100%;
       margin-top: 10px;
     }
-
-    select, textarea {
-      padding: 10px;
-      border: none;
+    textarea, select {
+      padding: 12px;
       border-radius: 8px;
-      background: #f0f0f0;
+      border: none;
+      background: #f1f1f1;
       color: #333;
     }
-
     button {
       padding: 12px;
+      margin-top: 15px;
       background: #00ffd5;
       border: none;
-      color: black;
+      color: #111;
       font-weight: bold;
-      border-radius: 8px;
-      margin-top: 15px;
       cursor: pointer;
+      border-radius: 8px;
     }
-
     audio {
       margin-top: 20px;
       width: 100%;
+      display: none;
     }
-
     footer {
       text-align: center;
       padding: 20px;
-      margin-top: 40px;
       font-size: 14px;
       color: #aaa;
     }
-
     footer a {
       color: #00ffd5;
       text-decoration: none;
     }
-
-    .credit {
-      margin-top: 15px;
-      font-size: 12px;
-      color: #ccc;
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes float {
+      0% { transform: translateY(0); }
+      100% { transform: translateY(-10px); }
     }
   </style>
 </head>
@@ -87,6 +86,7 @@
   <div class="overlay">
     <div class="container">
       <h1>🎤 AI Voice Generator</h1>
+
       <label for="text">Enter your text:</label>
       <textarea id="text" rows="4" placeholder="Type something to convert to voice..."></textarea>
 
@@ -95,7 +95,7 @@
         <option value="miku">Hatsune Miku</option>
         <option value="nahida">Nahida</option>
         <option value="nami">Nami</option>
-        <option value="ana">Ana (Female)</option>
+        <option value="ana">Ana</option>
         <option value="optimus_prime">Optimus Prime</option>
         <option value="goku">Goku</option>
         <option value="taylor_swift">Taylor Swift</option>
@@ -108,13 +108,12 @@
 
       <button onclick="generateVoice()">🔊 Generate Voice</button>
 
-      <audio id="audio" controls hidden></audio>
-      <p id="status" class="credit"></p>
+      <audio id="audio" controls></audio>
+      <p id="status"></p>
     </div>
-
     <footer>
       Made with ❤️ by <a href="https://t.me/TcronebHackx" target="_blank">Tcroneb Hackx</a><br>
-      <span class="credit">Powered by <a href="https://api.agatz.xyz" target="_blank">Agatz API</a></span>
+      Powered by <a href="https://api.agatz.xyz" target="_blank">Agatz API</a>
     </footer>
   </div>
 
@@ -131,25 +130,28 @@
       }
 
       status.textContent = "⏳ Generating voice...";
-      audio.hidden = true;
+      audio.style.display = "none";
+
+      const apiUrl = `https://api.agatz.xyz/api/voiceover?text=${encodeURIComponent(text)}&model=${model}`;
+      const corsProxy = `https://corsproxy.io/?${encodeURIComponent(apiUrl)}`;
 
       try {
-        const response = await fetch(`https://api.agatz.xyz/api/voiceover?text=${encodeURIComponent(text)}&model=${model}`);
+        const response = await fetch(corsProxy);
         const data = await response.json();
 
-        if (data.status === 200) {
+        if (data.status === 200 && data.data.oss_url) {
           audio.src = data.data.oss_url;
-          audio.hidden = false;
+          audio.style.display = "block";
           audio.play();
           status.textContent = "✅ Voice generated successfully!";
         } else {
-          status.textContent = "❌ Error: " + data.message || "Unknown error";
+          status.textContent = "❌ Error: " + (data.message || "Unknown issue");
         }
-      } catch (err) {
-        console.error(err);
-        status.textContent = "❌ Failed to fetch voice.";
+      } catch (error) {
+        console.error(error);
+        status.textContent = "❌ Failed to fetch voice. Please try again.";
       }
     }
   </script>
 </body>
-  </html>
+</html>
